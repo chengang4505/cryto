@@ -282,18 +282,18 @@ export default class Trader{
         });
         
         let reserveOpenOrders = this.orders.filter(e =>(e.type === Code.OPEN && !orderMap[e.id]) && e.status === Code.COMPLETE);
-        let upOrders = [];
-        let downOrders = [];
-        reserveOpenOrders.forEach(e => {
-            if(e.price >= price) upOrders.push(e);
-            else downOrders.push(e);
-        });
-        downOrders.sort((a,b) => {
-            return a.price - b.price;
-            // return b.price - a.price;
-        });
+        // let upOrders = [];
+        // let downOrders = [];
+        // reserveOpenOrders.forEach(e => {
+        //     if(e.price >= price) upOrders.push(e);
+        //     else downOrders.push(e);
+        // });
+        // downOrders.sort((a,b) => {
+        //     return a.price - b.price;
+        //     // return b.price - a.price;
+        // });
         
-        reserveOpenOrders = [...downOrders,...upOrders];
+        // reserveOpenOrders = [...downOrders,...upOrders];
         // if(reserveOpenOrders.length) Log(reserveOpenOrders)
 
         if(closeN < this.closeMax && (reserveOpenOrders.length > 0 || this.stocks > 0.001)){
@@ -316,7 +316,7 @@ export default class Trader{
 
                     let refOrder,order;
                     if(refOrders.length > 0){
-                        refOrder = refOrders[0];
+                        refOrder = refOrders[refOrders.length-1];
                         reserveOpenOrders = reserveOpenOrders.filter(e => ( e.id !== refOrder.id));
                         order = { id:null, status:Code.PROCESS,price:e.price,num:refOrder.num,order:refOrder,type:Code.CLOSE};
                     }

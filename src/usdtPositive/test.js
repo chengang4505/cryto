@@ -37,7 +37,7 @@ async function test(){
     // console.log(await ex.openOrder(57900,1));
     // console.log(await ex.closeOrder(58488,3));
     // console.log(await ex.cancelOrder(['829004709414567936']));
-    console.log(await ex.getAccount());
+    // console.log(await ex.getAccount());
     //828758343987728384
     // console.log(await ex.getOrderInfo(['829004087122235392','829004492837896193','829004709414567936']));
     // console.log((await ex.getProcessOrders()));
@@ -45,7 +45,7 @@ async function test(){
     // console.log(await ex.closePostion(1));
     // console.log(await ex.getPrice());
     // ex.getMa();
-    // await ex.clear();
+    await ex.clear();
 
 
 
