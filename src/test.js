@@ -4,7 +4,8 @@ import HuobiRestAPI from './index.js'
 import TA from './TA.js'
 
 let accessKey = '6f355162-d0649c48-f23e8167-ez2xc4vb6n';
-let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
+let secretKey = 'ca63f40b-cee83f36-731994cc-af770';  
+// 
 
 const myHuobiRestAPI = new HuobiRestAPI({
     accessKey, secretKey
