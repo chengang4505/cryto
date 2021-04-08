@@ -12,7 +12,7 @@ const Code  = {
 }
 
 export default class UsdtContract{
-    constructor(symbol = 'FIL',option = {}){
+    constructor(symbol = 'ETH',option = {}){
         let {accessKey,secretKey} = option;
 
         this.huobiAPI = new HuobiRequest({
@@ -92,7 +92,7 @@ export default class UsdtContract{
             return this.huobiHbdmAPI.fetch('/linear-swap-api/v1/swap_price_limit',{method:'GET',params:{contract_code:this.contractCode}}).then(priceLimit => {
                 accountInfo.high_limit = priceLimit.data[0].high_limit;
                 accountInfo.low_limit = priceLimit.data[0].low_limit;
-                console.log('getAccount end')
+                // console.log('getAccount end')
                 this.accountInfo = accountInfo;
                 return accountInfo;
             })

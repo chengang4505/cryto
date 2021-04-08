@@ -53,7 +53,7 @@ export default class HuobiRestAPI {
 
 // api.btcgateway.pro
 // api.huobi.pro
-  constructor({ accessKey, secretKey, proxy = false, hostname = 'api.huobi.pro', timeout = 30000 }) {
+  constructor({ accessKey, secretKey, proxy = false, hostname = 'api.huobi.pro', timeout = 20000 }) {
 
     if (!accessKey || !secretKey) {
         throw 'Params Missing: accessKey or secretKey';
