@@ -58,8 +58,8 @@ export default class Trader{
     // static Staus = Staus;
     constructor(option = {},adapter){
         let {
-            openPercentOffset = 1.5,
-            closePercentOffset = 1.5,
+            openPercentOffset = 1,
+            closePercentOffset = 1,
             minClosePercent = 1,
             openThreshold = 153,
             openMax = 3,
