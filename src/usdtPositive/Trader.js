@@ -311,7 +311,7 @@ export default class Trader{
                 // if(e.price - price > 0 && offsetPercent <= (this.closeMax+1)*this.closePercentOffset && offsetPercent >= this.closePercentOffset){
                     // let refOrder = reserveOpenOrders.shift();
                     // let oldOrders = reserveOpenOrders;
-                    let refOrders = reserveOpenOrders.filter(order => ( e.price - order.price >0 && this.getPercent(order.price,e.price) > this.minClosePercent ));
+                    let refOrders = reserveOpenOrders.filter(order => ( e.price - order.price >0 && this.getPercent(order.price,e.price) >= this.minClosePercent ));
                     // if(refOrders.length === 0) continue;
 
                     let refOrder,order;
