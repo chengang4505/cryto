@@ -229,7 +229,7 @@ export default class Trader{
     }
 
     getPercent(base,v){
-        return Math.abs(v-base)/base * 100;
+        return v-base/base * 100;
     }
 
     getCharge(price,num,percent){
