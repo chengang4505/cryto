@@ -60,7 +60,7 @@ export default class Trader{
         let {
             openPercentOffset = 1,
             closePercentOffset = 1,
-            minClosePercent = 1,
+            minClosePercent = 0.8,
             openThreshold = 155.0,
             openMax = 3,
             closeMax = 5,
