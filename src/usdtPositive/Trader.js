@@ -61,7 +61,7 @@ export default class Trader{
             openPercentOffset = 1,
             closePercentOffset = 1,
             minClosePercent = 1,
-            openThreshold = 153,
+            openThreshold = 155.0,
             openMax = 3,
             closeMax = 5,
             unitValue= 8,
