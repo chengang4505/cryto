@@ -61,10 +61,10 @@ export default class Trader{
             openPercentOffset = 1.5,
             closePercentOffset = 1.5,
             minClosePercent = 1,
-            openThreshold = Infinity,
+            openThreshold = 153,
             openMax = 3,
             closeMax = 5,
-            unitValue= 2,
+            unitValue= 8,
         } = option
        
         this.orders = [];
