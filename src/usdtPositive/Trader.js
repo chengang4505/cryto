@@ -229,7 +229,7 @@ export default class Trader{
     }
 
     getPercent(base,v){
-        return v-base/base * 100;
+        return (v-base)/base * 100;
     }
 
     getCharge(price,num,percent){
@@ -295,7 +295,8 @@ export default class Trader{
         
         let reserveOpenOrders = this.orders.filter(e =>(e.type === Code.OPEN && !orderMap[e.id]) && e.status === Code.COMPLETE);
 
-        this.position -= reserveOpenOrders.length;
+        reserveOpenOrders.forEach(e => { this.position -= e.num;  });
+
         console.log('base position',this.position);
 
         if(closeN < this.closeMaxN && (reserveOpenOrders.length > 0 || this.position >= 1)){
