@@ -6,17 +6,17 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 
 let config = {
-    symbol : 'FIL',
+    symbol : 'BTC',
     direction : Code.BUY,
-    lever_rate : 5,
-    openPercentOffset : 1,
-    closePercentOffset : 1,
-    minClosePercent : 0.9,
+    lever_rate : 10,
+    openPercentOffset : 1.5,
+    closePercentOffset : 1.5,
+    minClosePercent : 1,
     openMaxN : 3,
     closeMaxN : 5,
     unitValue: 10,
-    highPrice: 190,
-    lowPrice: 130,
+    highPrice: 66000,
+    lowPrice: 55000,
     // option
     openOffset : 0,
     winPrice: -1,
@@ -32,7 +32,7 @@ config.keyConfig = {accessKey,secretKey};
 
 if(config.direction === Code.BUY){
     config.openThreshold = 1000000;
-    config.positionPrice = 1000000;
+    config.positionPrice = 61000;
 } else {
     config.openThreshold = -1000000;
     config.positionPrice = -1000000;

@@ -40,10 +40,10 @@ async function start(){
 async function test(){
     let ex = trader.adapter;
     console.log(ex);
-    // console.log(ex.accountInfo);
+    console.log(ex.accountInfo);
     try{
     // 829004087122235392 828755543047880706
-    // console.log(await ex.openOrder(2070,30));
+    // console.log(await ex.openOrder(59000,30));
     // console.log(await ex.closeOrder(154,1));
     // console.log(await ex.cancelOrder(['829004709414567936']));
     // console.log(await ex.getAccount());
