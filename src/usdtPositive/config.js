@@ -14,7 +14,7 @@ let config = {
     minClosePercent : 0.9,
     openMaxN : 3,
     closeMaxN : 5,
-    unitValue: 4,
+    unitValue: 10,
     highPrice: 190,
     lowPrice: 130,
     // option

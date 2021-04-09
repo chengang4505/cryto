@@ -30,7 +30,7 @@ async function start(){
             errN++;
             console.log(e)
         }
-        next(1000 * 10);
+        next(1000 * 30);
     }
 }
 
