@@ -1,28 +1,6 @@
-
-function precision(num,p = 1){
-    // return _N(num,p);
-    return +(num.toFixed(p))
-}
-
-function getPrecision(num){
-    let v = num * 0.001;
-    let n = 0;
-    while(v < 1){
-        n++;
-        v *= 10;
-    }
-    return n;
-}
-
-const Code  = {
-    EMPTY:'empty',
-    PROCESS:'process',
-    COMPLETE:'complete',
-    OPEN:'open',
-    CLOSE:'close',
-    SELL:'sell',
-    BUY:'buy',
-}
+import Adapter from './adapter.js'
+import { precision ,getPrecision} from '../lib/utils.js'
+import { Code } from '../lib/const.js'
 
 
 // grid item
@@ -33,7 +11,7 @@ const Code  = {
 
 export default class Trader{
     // static Staus = Staus;
-    constructor(option = {},adapter,type = Code.BUY){
+    constructor(option = {}){
         let {
             openPercentOffset = 1,
             closePercentOffset = 1,
@@ -49,11 +27,16 @@ export default class Trader{
             winPrice= -1,
             losePrice= -1,
             positionPrice= 10000000,
+            symbol = 'FIL',
+            direction = Code.BUY,
+            lever_rate = 5,
         } = option
        
-        this.type = type;
+        this.option = option;
+        this.direction = direction;
+        this.symbol = symbol;
         this.orders = [];
-        this.adapter = adapter;
+        this.adapter = new Adapter(this.symbol,this.option.keyConfig,this.direction,lever_rate);
 
         this.openPercentOffset = openPercentOffset;
         this.closePercentOffset = closePercentOffset;
@@ -74,7 +57,8 @@ export default class Trader{
         // 多少张
         this.unitValue = unitValue;
         // 持仓
-        this.position = 0;
+        this.availablePosition = 0;
+        this.basePosition = 0;
         // 持仓均价
         this.positionPrice = positionPrice;
 
@@ -92,6 +76,12 @@ export default class Trader{
 
         this.openList = this.initListPercent(this.lowPrice,this.highPrice,this.openPercentOffset);
         this.closeList = this.initListPercent(this.lowPrice,this.highPrice,this.closePercentOffset);
+    }
+
+    async init(cb){
+        if(this.initFlag) return;
+        await this.adapter.init(cb);
+        this.initFlag = true;
     }
 
     initList(low = 30000,high = 62000,offset = 1,align = 50000){
@@ -139,6 +129,7 @@ export default class Trader{
     }
 
     async updateListInfo(price){
+        let direction = this.adapter.direction;
         let orderMap = {};
         this.orders.forEach(e =>{ orderMap[e.id] = e; });
 
@@ -147,7 +138,12 @@ export default class Trader{
 
         // this.maxPrice = Infinity;
         // this.closeRange = { max:Infinity,min:-Infinity };
-        let temp = this.closeList.filter(e => (e.price > price));
+        let temp = this.closeList.filter(e => {
+            return direction === Code.BUY ? e.price > price : e.price < price
+        });
+
+        if(direction === Code.SELL) temp.reverse();
+
         if(temp.length === 0){
             this.closeRange = { max:-1,min:-1 };
         }else{
@@ -180,11 +176,16 @@ export default class Trader{
 
 
         // this.minPrice = -Infinity;
-        temp =  this.openList.filter(e => (e.price < price));
+        temp =  this.openList.filter(e => {
+            // e.price < price
+            return direction === Code.BUY ? e.price < price : e.price > price
+        });
+
+        if(direction === Code.BUY) temp.reverse();
+
         if(temp.length === 0){
             this.openRange = { max:-1,min:-1 };
         }else{
-            temp.reverse();
             temp = temp.slice(0,this.openMaxN);
             let v1 = temp[0].price;
             let v2 = temp[temp.length-1].price;
@@ -202,7 +203,14 @@ export default class Trader{
             if(!order || removeOrderMap[e.ref]){
                 this.clear(e);
             }
-            else if( order.status !== Code.COMPLETE && (e.price < this.openRange.min || e.price > this.openRange.max || e.price > this.openThreshold)){
+            else if( order.status !== Code.COMPLETE && 
+                (
+                    e.price < this.openRange.min 
+                    || e.price > this.openRange.max 
+                    || (direction === Code.BUY && e.price > this.openThreshold)
+                    || (direction === Code.SELL && e.price < this.openThreshold)
+                ))
+            {
                 cancelOrders.push(order);
                 removeOrderMap[order.id] = true;
                 this.clear(e);
@@ -219,29 +227,32 @@ export default class Trader{
             let ids = cancelOrders.map(e => e.id);
             await this.adapter.cancelOrder(ids);
         }
-        // cancelOrders.forEach(order => {
-        //     exTest.cancelOrder(order.id);
-        //     if(order.type === Code.CLOSE && !order.order){
-        //         this.position += order.num;
-        //     }
-        // })
-        // Log('this.orders',this.orders.length)
     }
 
     getPercent(base,v){
-        return (v-base)/base * 100;
+        return Math.abs(v-base)/Math.abs(base) * 100;
     }
 
     getCharge(price,num,percent){
         return price * num * percent * 0.01;
     }
 
-    async completeList(price,account){
+    async completeList(price,account,available){
         let balance = account.margin_available * account.lever_rate;
-        console.log('margin_available',account.margin_available,'balance',balance,'position',this.position)
+        let direction = this.adapter.direction;
+
+        console.log(
+            'margin_available',precision(account.margin_available,1),
+            '张',Math.floor(balance/price/this.adapter.contract_size),
+            'available position',this.availablePosition)
+
         let minCharge = this.unitValue * this.adapter.contract_size * price * 0.0025;
 
-        if(balance > minCharge && price <= this.openThreshold){
+        if(
+            balance > minCharge 
+            && 
+            ((direction === Code.BUY && price <= this.openThreshold) || (direction === Code.SELL && price >= this.openThreshold))
+        ){
 
             // let num = this.openMaxN - openN;
             let ma = null;
@@ -251,18 +262,22 @@ export default class Trader{
                 console.log('ma',ma);
             }
 
-            // let tempOrders = this.openList.filter(e => (e.price>= this.openRange.min && e.price<=this.openRange.max));
+            let tempOrders = this.openList.filter(e => (e.price>= this.openRange.min && e.price<=this.openRange.max));
+            if(direction === Code.BUY) tempOrders.reverse();
 
             // Log(ma)
-            for (let index = this.openList.length-1; index >=0 ; index--) {
-                let e = this.openList[index];
+            for (let index = 0 ; index < tempOrders.length ; index++) {
+                let e = tempOrders[index];
 
                 if(balance < minCharge + this.unitValue  * this.adapter.contract_size * e.price) break;
 
                 if(e.ref) continue;
-                if(e.price < this.openRange.min || e.price > this.openRange.max) continue;
+                // if(e.price < this.openRange.min || e.price > this.openRange.max) continue;
 
-                if(this.openMAConfig && ma != null &&  e.price > ma) continue;
+                if(this.openMAConfig && ma != null 
+                    &&  
+                    ((direction === Code.BUY && e.price > ma) || (direction === Code.SELL && e.price < ma))
+                ) continue;
 
                 // if( e.price - price < 0 && offsetPercent <= (this.openMaxN+1)*this.openPercentOffset && offsetPercent >= this.openPercentOffset){
                     // 多少张
@@ -295,40 +310,58 @@ export default class Trader{
         
         let reserveOpenOrders = this.orders.filter(e =>(e.type === Code.OPEN && !orderMap[e.id]) && e.status === Code.COMPLETE);
 
-        reserveOpenOrders.forEach(e => { this.position -= e.num;  });
+        this.basePosition = this.availablePosition;
+        reserveOpenOrders.forEach(e => { this.basePosition -= e.num;  });
 
-        console.log('base position',this.position);
+        console.log('base position',this.basePosition);
+        if(this.basePosition < 0){
+            console.log('修正数据',this.basePosition);
+            this.correctData(reserveOpenOrders);
+            return;
+        }
 
-        if(closeN < this.closeMaxN && (reserveOpenOrders.length > 0 || this.position >= 1)){
-        // if( (reserveOpenOrders.length > 0 || this.position > 0.001)){
+        if(closeN < this.closeMaxN && (reserveOpenOrders.length > 0 || this.basePosition >= 1)){
             let num = this.closeMaxN - closeN;
+
+            let tempOrders = this.closeList.filter(e => (e.price>= this.closeRange.min && e.price<=this.closeRange.max));
+            if(direction === Code.SELL) tempOrders.reverse();
+
             // Log('closeN',closeN)
-            for (let index = 0; index < this.closeList.length ; index++) {
-                let e = this.closeList[index];
+            for (let index = 0; index < tempOrders.length ; index++) {
+                let e = tempOrders[index];
 
                 // console.log('reserveOpenOrders',reserveOpenOrders.length)
-                if(num <= 0 || (reserveOpenOrders.length <= 0 && this.position < 1)) break;
+                if(num <= 0 || (reserveOpenOrders.length <= 0 && this.basePosition < 1) || this.availablePosition <= 0) break;
 
-                if(e.price < this.closeRange.min || e.price > this.closeRange.max) continue;
+                // if(e.price < this.closeRange.min || e.price > this.closeRange.max) continue;
 
-                // let offsetPercent = this.getPercent(price,e.price);
                 // if(e.price - price > 0 && e.price <= this.maxPrice){
                     // let oldOrders = reserveOpenOrders;
                     // console.log('num',num)
-                    let refOrders = reserveOpenOrders.filter(order => ( e.price - order.price >0 && this.getPercent(order.price,e.price) >= this.minClosePercent ));
+                    let refOrders = reserveOpenOrders.filter(order =>  {
+                        let offsetPercent = this.getPercent(order.price,e.price);
+                        return (direction === Code.BUY && order.price < e.price && offsetPercent >= this.minClosePercent)||
+                        (direction === Code.SELL && order.price > e.price  && offsetPercent >= this.minClosePercent)
+                    });
                     // if(refOrders.length === 0) continue;
 
                     let refOrder,order;
+                    let offsetPercent = this.getPercent(this.positionPrice,e.price);
                     if(refOrders.length > 0){
                         console.log('orders---')
                         refOrder = refOrders[refOrders.length-1];
                         reserveOpenOrders = reserveOpenOrders.filter(e => ( e.id !== refOrder.id));
                         order = { id:null, status:Code.PROCESS,price:e.price,num:refOrder.num,order:refOrder,type:Code.CLOSE};
                     }
-                    else if(this.position >= 1 && reserveOpenOrders.length === 0 && this.getPercent(this.positionPrice,e.price) >= this.minClosePercent  ){
+                    else if(this.basePosition >= 1 && reserveOpenOrders.length === 0 
+                        && (
+                            ( direction === Code.BUY && e.price > this.positionPrice && offsetPercent >= this.minClosePercent) || 
+                            (direction === Code.SELL && e.price < this.positionPrice && offsetPercent >= this.minClosePercent)
+                        )
+                    ){
                         console.log('position---')
-                        let num = Math.min(this.position,this.unitValue);
-                        this.position -= num;
+                        let num = Math.min(this.basePosition,this.unitValue,this.availablePosition);
+                        this.basePosition -= num;
                         order = { id:null, status:Code.PROCESS,price:e.price,num:num,order:null,type:Code.CLOSE};
                     } 
                     else{
@@ -336,7 +369,8 @@ export default class Trader{
                     }
 
                     // Log(oldOrders)
-                    this.position -= order.num;
+                    // this.basePosition -= order.num;
+                    this.availablePosition -= order.num;
                     num--;
 
                     console.log('closeOrder',order.price,order.num)
@@ -348,6 +382,18 @@ export default class Trader{
                 
             }
         }
+    }
+
+    correctData(reserveOpenOrders){
+        let delMap = {};
+        let position =  this.availablePosition;
+        reserveOpenOrders.forEach(e => {
+            position -= e.num;
+            if(position < 0) delMap[e.id] = true;
+        });
+
+        console.log('remove open orders:',Object.keys(delMap).length);
+        this.orders = this.orders.filter(e => !delMap[e.id]);
     }
 
     async run(){
@@ -373,10 +419,10 @@ export default class Trader{
             await this.updateListInfo(price);
 
             if(account.position.length === 1){
-                this.position = account.position[0].available;
-                console.log('all position',account.position[0].volume)
+                this.availablePosition = account.position[0].available;
+                console.log('all position',account.position[0].volume,"available",account.position[0].available)
             }else{
-                this.position = 0;
+                this.availablePosition = 0;
             }
             await this.completeList(price,account);
 

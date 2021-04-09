@@ -1,18 +1,12 @@
-// let HuobiRestAPI = require('./index').HuobiRestAPI;
 
 import HuobiRequest from '../lib/huobiRequest.js'
 import TA from '../lib/TA.js'
-
-const Code  = {
-    EMPTY:'empty',
-    PROCESS:'process',
-    COMPLETE:'complete',
-    OPEN:'open',
-    CLOSE:'close',
-}
+import { Code } from '../lib/const.js'
 
 export default class UsdtContract{
-    constructor(symbol = 'ETH',option = {}){
+    constructor(symbol,option = {},direction,lever_rate){
+        this.direction = direction;
+
         let {accessKey,secretKey} = option;
 
         this.huobiAPI = new HuobiRequest({
@@ -27,7 +21,7 @@ export default class UsdtContract{
           this.symbol = symbol;
           this.contractCode = `${symbol}-USDT`;
         //   杠杆倍数
-          this.lever_rate = 5;
+          this.lever_rate = lever_rate;
         //   账户信息
           this.accountInfo = null;
         //   即1张合约对应多少标的
@@ -106,7 +100,7 @@ export default class UsdtContract{
         let args = {
             contract_code:this.contractCode,
             volume:num,
-            direction:'buy',
+            direction:this.direction,
             offset:'open',
             lever_rate: this.lever_rate ,
             price:price,
@@ -123,11 +117,11 @@ export default class UsdtContract{
     // id
     closeOrder(price = 0,num = 1,order_price_type = 'limit'){
         console.log('closeOrder')
-
+        let direction = this.direction === Code.BUY ? Code.SELL : Code.BUY;
         let args = {
             contract_code:this.contractCode,
             volume:num,
-            direction:'sell',
+            direction:direction,
             offset:'close',
             lever_rate: this.lever_rate ,
             price:price,
@@ -155,13 +149,16 @@ export default class UsdtContract{
         })
     }
 
-    closePostion(volume = 1){
+    closePostion(volume = 1,direction){
         console.log('closePostion')
+
+        if(!direction)
+        direction = this.direction === Code.BUY ? Code.SELL : Code.BUY;
 
         return this.huobiHbdmAPI.post('/linear-swap-api/v1/swap_cross_lightning_close_position',{
             contract_code:this.contractCode,
             volume:volume,
-            direction:'sell'
+            direction:direction
         }).then(data => {
             // let info = data.data.orders.map(e => ({id:e.order_id_str,status:e.status === 6 ? Code.COMPLETE : Code.PROCESS}));
             // console.log(data)
