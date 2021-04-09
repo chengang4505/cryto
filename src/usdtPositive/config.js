@@ -32,7 +32,7 @@ config.keyConfig = {accessKey,secretKey};
 
 if(config.direction === Code.BUY){
     config.openThreshold = 1000000;
-    config.positionPrice = 61000;
+    config.positionPrice = 1000000;
 } else {
     config.openThreshold = -1000000;
     config.positionPrice = -1000000;
