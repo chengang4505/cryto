@@ -73,24 +73,27 @@ export default class UsdtContract{
         .then(accountInfo => {
             let obj = accountInfo.data[0].contract_detail.filter(e => ( e.symbol === this.symbol ));
             accountInfo = obj[0];
+            this.accountInfo = accountInfo;
             return accountInfo;
         })
         .then(accountInfo => {
             return this.huobiHbdmAPI.post('/linear-swap-api/v1/swap_cross_position_info',{contract_code:this.contractCode}).then(positionInfo => {
                 positionInfo = positionInfo.data;
                 accountInfo.position = positionInfo;
+                this.accountInfo = accountInfo;
+                // console.log('accountInfo--',accountInfo)
                 return accountInfo
             })
         })
-        .then(accountInfo => {
-            return this.huobiHbdmAPI.fetch('/linear-swap-api/v1/swap_price_limit',{method:'GET',params:{contract_code:this.contractCode}}).then(priceLimit => {
-                accountInfo.high_limit = priceLimit.data[0].high_limit;
-                accountInfo.low_limit = priceLimit.data[0].low_limit;
-                // console.log('getAccount end')
-                this.accountInfo = accountInfo;
-                return accountInfo;
-            })
-        })
+        // .then(accountInfo => {
+        //     return this.huobiHbdmAPI.fetch('/linear-swap-api/v1/swap_price_limit',{method:'GET',params:{contract_code:this.contractCode}}).then(priceLimit => {
+        //         accountInfo.high_limit = priceLimit.data[0].high_limit;
+        //         accountInfo.low_limit = priceLimit.data[0].low_limit;
+        //         // console.log('getAccount end')
+        //         this.accountInfo = accountInfo;
+        //         return accountInfo;
+        //     })
+        // })
    
     }
     // id
@@ -225,8 +228,12 @@ export default class UsdtContract{
             return +data.tick.close;
         })
     }
-    getMa(type = 20,period = '60min'){
+    getMa(types = [20],period = '60min'){
         console.log('getMa');
+
+        if(!Array.isArray(types)) types = [types];
+
+        let size = Math.max(...types); 
 
         //PERIOD_H1 PERIOD_M15
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
@@ -234,16 +241,21 @@ export default class UsdtContract{
             params:{
                 contract_code:this.contractCode,
                 period:period,
-                size: type
+                size: size
             }
         }).then(data => {
             data = data.data.map(e => {
                 return {Open:e.open,High:e.high,Low:e.low,Close:e.close}
             });
             // console.log(data)
-            var mas = TA.MA(data, type);
+            // var mas = TA.MA(data, type);
+            var mas = types.map(v => {
+                let arr = TA.MA(data, v);
+                return arr[arr.length-1];
+            })
             // console.log(mas[mas.length-1])
-            return mas[mas.length-1];
+            return mas;
+            // return mas[mas.length-1];
         })
     }
 }

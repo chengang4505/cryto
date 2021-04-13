@@ -78,6 +78,12 @@ export default class Trader{
         this.closeList = this.initListPercent(this.lowPrice,this.highPrice,this.closePercentOffset);
     }
 
+    getInfo(){
+        return {
+            
+        }
+    }
+
     async init(cb){
         if(this.initFlag) return;
         await this.adapter.init(cb);
@@ -164,12 +170,12 @@ export default class Trader{
                     removeOrderMap[order.order.id] = true;
                 }
                 this.completeOrders.push({open:order.order ? order.order.price : null,close:order.price,num:order.num});
-                this.clear(e);
+                this.clearItem(e);
             }
             else if(e.price > this.closeRange.max || e.price < this.closeRange.min){
                 cancelOrders.push(order);
                 removeOrderMap[order.id] = true;
-                this.clear(e);
+                this.clearItem(e);
             }
 
         })
@@ -201,7 +207,7 @@ export default class Trader{
             let order = orderMap[e.ref];
             // let offsetPercent = this.getPercent(price,e.price);
             if(!order || removeOrderMap[e.ref]){
-                this.clear(e);
+                this.clearItem(e);
             }
             else if( order.status !== Code.COMPLETE && 
                 (
@@ -213,7 +219,7 @@ export default class Trader{
             {
                 cancelOrders.push(order);
                 removeOrderMap[order.id] = true;
-                this.clear(e);
+                this.clearItem(e);
             }
         })
 
@@ -255,11 +261,17 @@ export default class Trader{
         ){
 
             // let num = this.openMaxN - openN;
+            let mas = null;
             let ma = null;
             if(this.openMAConfig && this.openMAConfig.period && this.openMAConfig.type){
                 // console.log('openMAConfig',this.openMAConfig)
-                ma = await this.adapter.getMa(this.openMAConfig.type,this.openMAConfig.period); 
-                console.log('ma',ma);
+                mas = await this.adapter.getMa(this.openMAConfig.type,this.openMAConfig.period); 
+                if(this.direction === Code.BUY){
+                    ma = Math.min(...mas);
+                }else{
+                    ma = Math.max(...mas);
+                }
+                console.log('mas',mas.map(e => e.toFixed(4)).join(','),'ma',ma);
             }
 
             let tempOrders = this.openList.filter(e => (e.price>= this.openRange.min && e.price<=this.openRange.max));
@@ -430,8 +442,12 @@ export default class Trader{
 
     }
 
+    async clear(){
+        await this.adapter.clear();
+    }
 
-    clear(e){
+
+    clearItem(e){
         e.ref = null;
     }
 

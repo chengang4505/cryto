@@ -39,8 +39,8 @@ async function start(){
 // var ex = new Adapter('BTC',{accessKey,secretKey});
 async function test(){
     let ex = trader.adapter;
-    // console.log(ex);
-    console.log(ex.accountInfo);
+    console.log(ex);
+    // console.log(ex.accountInfo);
     try{
     // 829004087122235392 828755543047880706
     // console.log(await ex.openOrder(2070,30));
