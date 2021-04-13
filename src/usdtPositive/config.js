@@ -8,16 +8,16 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 let config = {
     symbol : 'XRP',
-    direction : Code.BUY,
+    direction : Code.SELL,
     lever_rate : 5,
-    openPercentOffset : 1.5,
-    closePercentOffset : 1,
-    minClosePercent : 1.8,
+    openPercentOffset : 0.5,
+    closePercentOffset : 0.5,
+    minClosePercent : 0.9,
     openMaxN : 3,
     closeMaxN : 5,
-    unitValue: 10,
-    highPrice: 200,
-    lowPrice: 150,
+    unitValue: 4,
+    highPrice: 2,
+    lowPrice: 1,
     // option
     openOffset : 0,
     winPrice: -1,
