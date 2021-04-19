@@ -15,8 +15,8 @@ async function start(){
     console.log('trader:',trader.symbol,trader.direction)
 
 
-    // next();
-    test();
+    next();
+    // test();
 
     function next(time = 0){
         setTimeout(run,time)
