@@ -11,17 +11,17 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 
 let config = {
-    symbol : 'XRP',
-    direction : Code.SELL,
+    symbol : 'LTC',
+    direction : Code.BUY,
     lever_rate : 5,
-    openPercentOffset : 0.5,
-    closePercentOffset : 0.5,
-    minClosePercent : 0.9,
+    openPercentOffset : 2,
+    closePercentOffset : 2,
+    minClosePercent : 3,
     openMaxN : 3,
     closeMaxN : 5,
-    unitValue: 4,
-    highPrice: 2,
-    lowPrice: 1,
+    unitValue: 5,
+    highPrice: 0.35,
+    lowPrice: 0.15,
     // option
     openOffset : 0,
     winPrice: -1,

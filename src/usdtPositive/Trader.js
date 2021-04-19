@@ -300,6 +300,7 @@ export default class Trader{
                 let order = { id:null, status:Code.PROCESS,price:e.price,num: num, type:Code.OPEN };
                 console.log('openOrder',order.price,order.num)
                 let id = await this.adapter.openOrder(order.price,order.num);
+                console.log('openOrder end')
                 order.id = id;
                 this.orders.push(order);
                 e.ref = order.id;
@@ -345,6 +346,8 @@ export default class Trader{
                 // console.log('reserveOpenOrders',reserveOpenOrders.length)
                 if(num <= 0 || (reserveOpenOrders.length <= 0 && this.basePosition < 1) || this.availablePosition <= 0) break;
 
+                if(e.ref) continue;
+
                 // if(e.price < this.closeRange.min || e.price > this.closeRange.max) continue;
 
                 // if(e.price - price > 0 && e.price <= this.maxPrice){
@@ -387,6 +390,7 @@ export default class Trader{
 
                     console.log('closeOrder',order.price,order.num)
                     let id = await this.adapter.closeOrder(order.price,order.num);
+                    console.log('closeOrder end')
                     order.id = id;
                     this.orders.push(order);
                     e.ref = order.id;
