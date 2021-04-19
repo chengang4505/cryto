@@ -11,25 +11,25 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 
 let config = {
-    symbol : 'LTC',
-    direction : Code.BUY,
+    symbol : 'ETH',
+    direction : Code.SELL,
     lever_rate : 5,
-    openPercentOffset : 2,
-    closePercentOffset : 2,
-    minClosePercent : 3,
+    openPercentOffset : 0.5,
+    closePercentOffset : 0.5,
+    minClosePercent : 0.9,
     openMaxN : 3,
     closeMaxN : 5,
-    unitValue: 5,
-    highPrice: 0.35,
-    lowPrice: 0.15,
+    unitValue: 80,
+    highPrice: 2500,
+    lowPrice: 2000,
     // option
     openOffset : 0,
     winPrice: -1,
     losePrice: -1,
-    openMAConfig : {type : [5,10,20,30],period : '5min'},
+    openMAConfig : {type : [20],period : '5min'},
     // openMAConfig : null,
     openThreshold: 1000000,
-    positionPrice: 1000000,
+    positionPrice: 1.8,
     
 }
 
