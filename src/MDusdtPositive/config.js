@@ -11,11 +11,11 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 
 let config = {
-    symbol : 'LTC',
-    lever_rate : 20,
+    symbol : 'ETH',
+    lever_rate : 10,
     profit : 0.8,
     addPercent : 1.6,
-    unitN:100,
+    unitN:50,
     direction:{
         sell:true,
         buy:true,
