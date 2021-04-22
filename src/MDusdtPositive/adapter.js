@@ -101,7 +101,7 @@ export default class UsdtContract{
     }
     // id
     openOrder(price = 100000,num = 1,direction,order_price_type = 'limit'){
-        console.log('openOrder')
+        // console.log('openOrder')
 
         let args = {
             contract_code:this.contractCode,
@@ -122,7 +122,7 @@ export default class UsdtContract{
     }
     // id
     closeOrder(price = 0,num = 1,direction,order_price_type = 'limit'){
-        console.log('closeOrder')
+        // console.log('closeOrder')
         // let direction = this.direction === Code.BUY ? Code.SELL : Code.BUY;
         let args = {
             contract_code:this.contractCode,
@@ -173,7 +173,7 @@ export default class UsdtContract{
     }
 
     clearAllProcessOrders(){
-        console.log('clearAllProcessOrders')
+        // console.log('clearAllProcessOrders')
 
         return this.huobiHbdmAPI.post('/linear-swap-api/v1/swap_cross_cancelall',{
             contract_code:this.contractCode
@@ -188,17 +188,17 @@ export default class UsdtContract{
     }
    
     getProcessOrders(){
-        console.log('getProcessOrders')
+        // console.log('getProcessOrders')
 
         return this.huobiHbdmAPI.post('/linear-swap-api/v1/swap_cross_openorders',{
             contract_code:this.contractCode
         }).then(data => {
-            let info = data.data.orders;
-            info.forEach(e =>{
-                e.id = e.order_id_str;
-                e.oldStatus = e.status;
-                e.status = e.oldStatus === 6 ? Code.COMPLETE : Code.PROCESS
-            });
+            let info = data.data.orders || [];
+            // info.forEach(e =>{
+            //     e.id = e.order_id_str;
+            //     e.oldStatus = e.status;
+            //     e.status = e.oldStatus === 6 ? Code.COMPLETE : Code.PROCESS
+            // });
             // console.log(info)
             return info;
         })

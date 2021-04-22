@@ -16,6 +16,7 @@ let config = {
     addPercent : 1.2,
     profit : 0.8,
     unitN:100,
+    // unitValue:1,
 }
 
 
