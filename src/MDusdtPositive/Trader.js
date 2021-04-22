@@ -36,7 +36,7 @@ export default class Trader{
 
     async run(){
 
-        let { profit, addPercent,unitN } = this.option ;
+        let { profit, addPercent,unitN,direction } = this.option ;
 
         Log('=============new===========');
 
@@ -77,12 +77,12 @@ export default class Trader{
             let ma = await this.adapter.getMa()
             Log('ma:',ma);
 
-            if ( price >= ma) {
-                Log('init sell',price);
-                this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
-            }else {
+            if ( direction.buy &&  price <= ma) {
                 Log('init buy',price);
                 this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
+            }else if(direction.sell && price >= ma){
+                Log('init sell',price);
+                this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
             }
 
         }
@@ -105,7 +105,7 @@ export default class Trader{
             if (pos.direction == 'sell') {
                 let isProfit = holdValue > price;
                 Log('Sell:','profit',profit,'addPercent',addPercent,'value:',isProfit ? value : -1 * value,);
-                if (isProfit && value >= profit*0.5) {
+                if (isProfit && value >= profit*0.4) {
                     //盈利
                     if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue - holdValue * profit * 0.01;
@@ -116,7 +116,7 @@ export default class Trader{
                     // this.adapter.closeOrder(price,pos.volume, 'buy', 'optimal_20_fok');
                 }
                 
-                if(!isProfit && value >= addPercent * 0.5  && availableUnit > 1) {
+                if(!isProfit && value >= addPercent * 0.4  && availableUnit > 1) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue + holdValue * addPercent * 0.01;
@@ -133,7 +133,7 @@ export default class Trader{
                 let isProfit = holdValue < price;
                 Log('Buy:','profit',profit,'addPercent',addPercent,'value:',isProfit ? value : -1 * value,);
 
-                if (isProfit && value >= profit*0.5) {
+                if (isProfit && value >= profit*0.4) {
                     //盈利
                     // this.adapter.closeOrder(price,pos.volume, 'sell', 'optimal_20_fok');
                     if(!openOrder || openOrder.offset !== 'close'){
@@ -145,7 +145,7 @@ export default class Trader{
                     }
                 }
                 
-                if (!isProfit && value >= addPercent*0.5 && availableUnit > 1 ) {
+                if (!isProfit && value >= addPercent*0.4 && availableUnit > 1 ) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue - holdValue * addPercent * 0.01;
