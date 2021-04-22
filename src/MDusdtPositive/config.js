@@ -13,8 +13,8 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 let config = {
     symbol : 'LTC',
     lever_rate : 20,
-    profit : 1,
-    addPercent : 2,
+    profit : 0.8,
+    addPercent : 1.6,
     unitN:100,
     direction:{
         sell:true,
