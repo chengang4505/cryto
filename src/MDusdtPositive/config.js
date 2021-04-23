@@ -11,11 +11,13 @@ let secretKey = 'ca63f40b-cee83f36-731994cc-af770';
 
 
 let config = {
-    symbol : 'ETH',
-    lever_rate : 10,
+    symbol : 'DOGE',
+    lever_rate : 30,
     profit : 0.8,
     addPercent : 1.6,
-    unitN:50,
+    addRatio:2,
+    baseUnit:0.22,
+    unitN:100,
     direction:{
         sell:true,
         buy:true,

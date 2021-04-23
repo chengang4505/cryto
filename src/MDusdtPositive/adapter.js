@@ -231,7 +231,7 @@ export default class UsdtContract{
             return +data.tick.close;
         })
     }
-    getMa(type = 5,period = '5min'){
+    getMa(type = 10,period = '5min'){
         // console.log('getMa');
         //PERIOD_H1 PERIOD_M15
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
