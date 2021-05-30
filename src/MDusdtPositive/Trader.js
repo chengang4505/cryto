@@ -116,7 +116,7 @@ export default class Trader{
                 let isProfit = holdValue > price;
                 Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
                 // if (isProfit && value >= profit*0.4) {
-                if (pos.available > 0 && pos.frozen == 0) {
+                if (pos.volume > 0 && pos.frozen == 0) {
                     //盈利
                     // if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue - holdValue * profit * 0.01;
@@ -129,7 +129,10 @@ export default class Trader{
 
                 if(!isProfit && profitPercent > clearPercent){
                     Log('sell-clear===========================');
-                    if(pos.available > 0 && pos.frozen > 0)  await this.adapter.clearAllProcessOrders();
+                    if(pos.volume > 0 && pos.frozen > 0)  {
+                        Log('clearAllProcessOrders');
+                        await this.adapter.clearAllProcessOrders();
+                    }
                     await this.adapter.closePostion(pos.volume,pos.direction === Code.BUY ? Code.SELL : Code.BUY );
                     return;
                 }
@@ -152,7 +155,7 @@ export default class Trader{
                 Log('Buy:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
 
                 // if (isProfit && value >= profit*0.4) {
-                if (pos.available > 0 && pos.frozen == 0) {
+                if (pos.volume > 0 && pos.frozen == 0) {
                     //盈利
                     // this.adapter.closeOrder(price,pos.volume, 'sell', 'optimal_20_fok');
                     // if(!openOrder || openOrder.offset !== 'close'){
@@ -166,7 +169,10 @@ export default class Trader{
 
                 if(!isProfit && profitPercent > clearPercent){
                     Log('buy-clear===========================');
-                    if(pos.available > 0 && pos.frozen > 0) await this.adapter.clearAllProcessOrders();
+                    if(pos.volume > 0 && pos.frozen > 0) {
+                        Log('clearAllProcessOrders');
+                        await this.adapter.clearAllProcessOrders();
+                    }
                     await this.adapter.closePostion(pos.volume,pos.direction === Code.BUY ? Code.SELL : Code.BUY );
                     return;
                 }
@@ -183,13 +189,13 @@ export default class Trader{
                 }
             }
 
-            if(
-                (pos.available > 0 && pos.frozen > 0)
-            ){
-                Log('clear available-frozen info:',account.available,account.frozen);
-                await this.adapter.clearAllProcessOrders();
-                return;
-            }
+            // if(
+            //     (pos.volume > 0 && pos.frozen > 0)
+            // ){
+            //     Log('clear available-frozen info:',account.available,account.frozen);
+            //     await this.adapter.clearAllProcessOrders();
+            //     return;
+            // }
         }
 
     }
