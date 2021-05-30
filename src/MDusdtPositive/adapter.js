@@ -231,7 +231,7 @@ export default class UsdtContract{
             return +data.tick.close;
         })
     }
-    getMa(type = 10,period = '5min'){
+    getMa(type = 5,period = '1min'){
         // console.log('getMa');
         //PERIOD_H1 PERIOD_M15
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
@@ -249,5 +249,66 @@ export default class UsdtContract{
             let arr = TA.MA(data, type);
             return arr[arr.length-1];
         })
+    }
+    getMaDir(type = [10,20],period = '15min'){
+        let [type1,type2] = type;
+        return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
+            method:'GET',
+            params:{
+                contract_code:this.contractCode,
+                period:period,
+                size: Math.max(type1,type2)+5
+            }
+        }).then(data => {
+            data = data.data.map(e => {
+                return {Open:e.open,High:e.high,Low:e.low,Close:e.close}
+            });
+
+            let arr = TA.MA(data, type1);
+            let dir1 = arr[arr.length-2] - arr[arr.length-3];
+
+            arr = TA.MA(data, type2);
+            // console.log(type2,arr);
+            let dir2 = arr[arr.length-2] - arr[arr.length-3];
+
+            return [dir1,dir2];
+        })
+
+    }
+    gettest(type =20,period = '15min'){
+        // let [type1,type2] = type;
+        return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
+            method:'GET',
+            params:{
+                contract_code:this.contractCode,
+                period:period,
+                size: type+50
+            }
+        }).then(data => {
+            data = data.data.map(e => {
+                return {Open:e.open,High:e.high,Low:e.low,Close:e.close}
+            });
+
+            let arr = TA.MA(data, type);
+            arr = arr.filter(e => !isNaN(e));
+
+            let dirs = [];
+            // let dir1 = arr[arr.length-2] - arr[arr.length-3];
+            let offset = 1;
+            arr.forEach((e,index) => {
+                if(index >= offset){
+                    dirs.push(arr[index] - arr[index-offset]);
+                }else{
+                    dirs.push(0);
+                }
+            })
+
+            dirs = dirs.map(e => { return (e/2000*100).toFixed(4) } );
+
+           
+
+            return dirs;
+        })
+
     }
 }

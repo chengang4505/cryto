@@ -32,7 +32,7 @@ async function start(){
             errN++;
             console.log(e)
         }
-        next(1000 * 30);
+        next(1000 * 20);
     }
 }
 
@@ -46,7 +46,7 @@ async function test(){
     try{
     // 829004087122235392 828755543047880706
     // console.log(await ex.openOrder(59000,30));
-    console.log(await ex.closeOrder(255,40));
+    // console.log(await ex.closeOrder(255,40));
     // console.log(await ex.cancelOrder(['829004709414567936']));
     // console.log(await ex.getAccount());
     //828758343987728384
@@ -55,6 +55,7 @@ async function test(){
     // console.log(await ex.clearAllProcessOrders());
     // console.log(await ex.closePostion(6));
     // console.log(await ex.getPrice());
+    console.log(await ex.gettest());
     // ex.getMa();
     // await ex.clear();
 

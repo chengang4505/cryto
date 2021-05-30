@@ -18,11 +18,13 @@ export default class Trader{
         let {
             lever_rate,
             symbol,
-            unitValue
+            unitValue,
+            clearPercent
         } = option;
         this.option = option;
         this.symbol = symbol;
         this.unitValue = unitValue;
+        this.clearPercent = clearPercent;
         this.precision = 0;
         this.adapter = new Adapter(this.symbol,this.option.keyConfig,lever_rate);
     }
@@ -36,7 +38,7 @@ export default class Trader{
 
     async run(){
 
-        let { profit, addPercent,addRatio,baseUnit,unitN,direction } = this.option ;
+        let { profit, addPercent,addRatio,baseUnit,unitN,direction,clearPercent,maxLever } = this.option ;
 
         Log('=============new===========');
 
@@ -76,12 +78,16 @@ export default class Trader{
             }
 
             let ma = await this.adapter.getMa()
-            Log('ma:',ma);
+            let dirs = await this.adapter.getMaDir();
+            dirs = dirs.map(e => { return e/price*100 });
+            Log('ma:',ma,'dirs',dirs);
 
-            if ( direction.buy &&  price <= ma) {
+            // return;
+
+            if ( direction.buy &&  price <= ma && dirs[0] > 0.1 && dirs[1] > 0.1) {
                 Log('init buy',price);
                 await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
-            }else if(direction.sell && price >= ma){
+            }else if(direction.sell && price >= ma && dirs[0] < -0.1 && dirs[1] < -0.1){
                 Log('init sell',price);
                 await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
             }
@@ -96,16 +102,17 @@ export default class Trader{
             
             
             let holdValue = pos.cost_open;
-            Log('position:',pos.volume,'holdValue:',holdValue);
+            // Log(this.unitValue * this.adapter.contract_size*price,pos.profit)
+            let profitPercent = Math.abs(pos.profit) / (this.unitValue * this.adapter.contract_size*price) * 100;
+            Log('position:',pos.volume,'holdValue:',holdValue,'profit',pos.profit,'profitPercent',profitPercent);
 
             let value = getPercent(holdValue,price);
-
             // Log('value:',value);
 
             // 做空
             if (pos.direction == 'sell') {
                 let isProfit = holdValue > price;
-                Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'value:',isProfit ? value : -1 * value,);
+                Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
                 if (isProfit && value >= profit*0.4) {
                     //盈利
                     if(!openOrder || openOrder.offset !== 'close'){
@@ -116,14 +123,21 @@ export default class Trader{
                     }
                     // this.adapter.closeOrder(price,pos.volume, 'buy', 'optimal_20_fok');
                 }
+
+                if(!isProfit && profitPercent > clearPercent){
+                    Log('sell-clear===========================');
+                    if(pos.available > 0 && pos.frozen > 0)  await this.adapter.clearAllProcessOrders();
+                    await this.adapter.closePostion(pos.volume,pos.direction === Code.BUY ? Code.SELL : Code.BUY );
+                    return;
+                }
                 
-                if(!isProfit && value >= addPercent * 0.4  && availableUnit > pos.volume * 0.8) {
+                if(!isProfit && pos.volume /this.unitValue < maxLever  && value >= addPercent * 0.4  && availableUnit > pos.volume * 0.8) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue + holdValue * addPercent * 0.01;
                         openPrice = precision(openPrice,this.precision);
                         Log('sell---add',value.toFixed(4),'openPrice',openPrice);
-                        await this.adapter.openOrder(openPrice,Math.min(pos.volume*addRatio,availableUnit), 'sell');
+                        await this.adapter.openOrder(openPrice,Math.min(Math.round(pos.volume*addRatio),availableUnit), 'sell');
                     }
                     // this.adapter.openOrder(price,Math.min(pos.volume,availableUnit), 'sell', 'optimal_20_fok');
                 } 
@@ -132,7 +146,7 @@ export default class Trader{
             // 做多
             if (pos.direction == 'buy') {
                 let isProfit = holdValue < price;
-                Log('Buy:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'value:',isProfit ? value : -1 * value,);
+                Log('Buy:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
 
                 if (isProfit && value >= profit*0.4) {
                     //盈利
@@ -145,21 +159,28 @@ export default class Trader{
 
                     }
                 }
+
+                if(!isProfit && profitPercent > clearPercent){
+                    Log('buy-clear===========================');
+                    if(pos.available > 0 && pos.frozen > 0) await this.adapter.clearAllProcessOrders();
+                    await this.adapter.closePostion(pos.volume,pos.direction === Code.BUY ? Code.SELL : Code.BUY );
+                    return;
+                }
                 
-                if (!isProfit && value >= addPercent*0.4 && availableUnit > pos.volume * 0.8 ) {
+                if (!isProfit && pos.volume /this.unitValue < maxLever && value >= addPercent*0.4 && availableUnit > pos.volume * 0.8 ) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue - holdValue * addPercent * 0.01;
                         openPrice = precision(openPrice,this.precision);
                         Log('buy---add',value.toFixed(4),'openPrice',openPrice);
-                        await this.adapter.openOrder(openPrice,Math.min(pos.volume*addRatio,availableUnit), 'buy');
+                        await this.adapter.openOrder(openPrice,Math.min(Math.round(pos.volume*addRatio),availableUnit), 'buy');
                     }
                     // this.adapter.openOrder(price, Math.min(pos.volume,availableUnit), 'buy', 'optimal_20_fok');
                 }
             }
 
             if(
-                (account.available > 0 && available.frozen > 0)
+                (pos.available > 0 && pos.frozen > 0)
             ){
                 Log('clear available-frozen info:',account.available,account.frozen);
                 await this.adapter.clearAllProcessOrders();
