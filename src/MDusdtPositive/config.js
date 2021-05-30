@@ -17,7 +17,7 @@ let config = {
     addPercent : 1.5,
     addRatio:1.5,
     baseUnit:1,
-    clearPercent:1,
+    clearPercent:0.5,
     maxLever:0.5,
     unitN:100,
     direction:{
