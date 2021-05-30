@@ -115,14 +115,15 @@ export default class Trader{
             if (pos.direction == 'sell') {
                 let isProfit = holdValue > price;
                 Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
-                if (isProfit && value >= profit*0.4) {
+                // if (isProfit && value >= profit*0.4) {
+                if (pos.available > 0 && pos.frozen == 0) {
                     //盈利
-                    if(!openOrder || openOrder.offset !== 'close'){
+                    // if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue - holdValue * profit * 0.01;
                         closePrice = precision(closePrice,this.precision);
                         Log('sell---close',value.toFixed(4),'closePrice',closePrice);
                         await this.adapter.closeOrder(closePrice,pos.volume, 'buy');
-                    }
+                    // }
                     // this.adapter.closeOrder(price,pos.volume, 'buy', 'optimal_20_fok');
                 }
 
@@ -150,16 +151,17 @@ export default class Trader{
                 let isProfit = holdValue < price;
                 Log('Buy:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
 
-                if (isProfit && value >= profit*0.4) {
+                // if (isProfit && value >= profit*0.4) {
+                if (pos.available > 0 && pos.frozen == 0) {
                     //盈利
                     // this.adapter.closeOrder(price,pos.volume, 'sell', 'optimal_20_fok');
-                    if(!openOrder || openOrder.offset !== 'close'){
+                    // if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue + holdValue * profit * 0.01;
                         closePrice = precision(closePrice,this.precision);
                         Log('buy---close',value.toFixed(4),'closePrice',closePrice);
                         await this.adapter.closeOrder(closePrice,pos.volume, 'sell');
 
-                    }
+                    // }
                 }
 
                 if(!isProfit && profitPercent > clearPercent){
