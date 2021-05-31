@@ -84,8 +84,8 @@ export default class Trader{
 
             // return;
 
-            let isUp = dirs[0] > 0.1 && dirs[1] > 0.1;
-            let isDown = dirs[0] < -0.1 && dirs[1] < -0.1;
+            let isUp = dirs[0] > 0.05 && dirs[1] > 0.05;
+            let isDown = dirs[0] < -0.05 && dirs[1] < -0.05;
             if ( direction.buy &&  price <= ma && (isUp || !isDown)) {
                 Log('init buy',price);
                 await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
