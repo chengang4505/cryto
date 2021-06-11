@@ -250,7 +250,7 @@ export default class UsdtContract{
             return arr[arr.length-1];
         })
     }
-    getMaDir(type = [10,20],period = '5min'){
+    getMaDir(type = [20,30],period = '5min'){
         let [type1,type2] = type;
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
             method:'GET',
