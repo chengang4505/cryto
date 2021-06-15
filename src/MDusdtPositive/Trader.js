@@ -116,7 +116,7 @@ export default class Trader{
                 let isProfit = holdValue > price;
                 Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
                 // if (isProfit && value >= profit*0.4) {
-                if (pos.volume > 0 && pos.frozen == 0) {
+                if (isProfit && pos.volume > 0 && pos.frozen == 0 && value >= profit*0.4) {
                     //盈利
                     // if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue - holdValue * profit * 0.01;
