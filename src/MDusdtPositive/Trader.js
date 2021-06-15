@@ -149,6 +149,14 @@ export default class Trader{
                 } 
             }
 
+            if(
+                (pos.volume > 0 && pos.frozen > 0 && pos.volume !== pos.frozen)
+            ){
+                Log('clear available-frozen info:',account.available,account.frozen);
+                await this.adapter.clearAllProcessOrders();
+                return;
+            }
+
             // 做多
             if (pos.direction == 'buy') {
                 let isProfit = holdValue < price;
@@ -189,13 +197,7 @@ export default class Trader{
                 }
             }
 
-            // if(
-            //     (pos.volume > 0 && pos.frozen > 0)
-            // ){
-            //     Log('clear available-frozen info:',account.available,account.frozen);
-            //     await this.adapter.clearAllProcessOrders();
-            //     return;
-            // }
+            
         }
 
     }

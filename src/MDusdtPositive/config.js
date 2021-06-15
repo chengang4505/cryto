@@ -12,16 +12,16 @@ let secretKey = '17053d8b-04ee85b6-d3ed9a22-5e2c2';
 
 let config = {
     symbol : 'ETH',
-    lever_rate : 30,
-    profit : 0.8,
-    addPercent : 3,
-    addRatio:0.8,
+    lever_rate : 5,
+    profit : 0.3,
+    addPercent : 1.2,
+    addRatio:1,
     baseUnit:0.1,
     clearPercent:10000,
     maxLever:10000,
     unitN:100,
     direction:{
-        sell:true,
+        sell:false,
         buy:true,
     },
     // unitValue:31,
