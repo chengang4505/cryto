@@ -250,14 +250,14 @@ export default class UsdtContract{
             return arr[arr.length-1];
         })
     }
-    getMaDir(type = [20,30],period = '5min'){
-        let [type1,type2] = type;
+    getMaDir(type = [20,30,60],period = '60min'){ 
+        let [type1,type2,type3] = type;
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{
             method:'GET',
             params:{
-                contract_code:this.contractCode,
+                contract_code:this.contractCode, 
                 period:period,
-                size: Math.max(type1,type2)+5
+                size: Math.max(type1,type2,type3)+5
             }
         }).then(data => {
             data = data.data.map(e => {
@@ -266,15 +266,38 @@ export default class UsdtContract{
 
             let arr = TA.MA(data, type1);
             let dir1 = arr[arr.length-2] - arr[arr.length-3];
+            let ma1 = arr[arr.length-2];
 
             arr = TA.MA(data, type2);
-            // console.log(type2,arr);
             let dir2 = arr[arr.length-2] - arr[arr.length-3];
+            let ma2 = arr[arr.length-2];
 
-            return [dir1,dir2];
+            arr = TA.MA(data, type3);
+            let dir3 = arr[arr.length-2] - arr[arr.length-3];
+            let ma3 = arr[arr.length-2];
+
+
+            var boll = TA.BOLL(data, 20, 2)
+            var upLine = boll[0]
+            var midLine = boll[1]
+            var downLine = boll[2]
+
+            var bollInfo = {
+                updir:upLine[upLine.length-1]- upLine[upLine.length-2],
+                downdir:downLine[downLine.length-1]- downLine[downLine.length-2],
+                midValue:midLine[midLine.length-1],
+                upValue:upLine[upLine.length-1],
+                downValue:downLine[downLine.length-1],
+            }
+
+            return {
+                dir1,dir2,dir3,ma1,ma2,ma3,
+                bollInfo
+            };
         })
 
     }
+
     gettest(type =20,period = '15min'){
         // let [type1,type2] = type;
         return this.huobiHbdmAPI.fetch('/linear-swap-ex/market/history/kline',{

@@ -44,6 +44,7 @@ export default class Trader{
 
         let account = await this.adapter.getAccount()
         let margin = account.margin_available;
+        let offsetPercent = (1-addRatio/(addRatio+1))*addPercent;
 
         let price = await this.adapter.getPrice();
         let openOrders = await this.adapter.getProcessOrders();
@@ -78,18 +79,44 @@ export default class Trader{
             }
 
             let ma = await this.adapter.getMa()
-            let dirs = await this.adapter.getMaDir();
-            dirs = dirs.map(e => { return e/price*100 });
-            Log('ma:',ma,'dirs',dirs);
+            let info = await this.adapter.getMaDir(); 
+            let bollInfo = info.bollInfo;
+
+            info.dir1 = info.dir1/price*100;
+            info.dir2 = info.dir2/price*100;
+            info.dir3 = info.dir3/price*100;
+           
+            Log('ma:',ma,'info',info);
 
             // return;
 
-            let isUp = dirs[0] > 0.1 && dirs[1] > 0.1;
-            let isDown = dirs[0] < -0.1 && dirs[1] < -0.1;
-            if ( direction.buy &&  (isUp || price <= ma)) {
+            // let isUp = dirs[0] > 0.1 && dirs[1] > 0.1;
+            let isUp = info.ma1 > info.ma2 && info.ma2 > info.ma3;
+            let isDown = info.ma1 < info.ma2 && info.ma2 < info.ma3 &&( info.dir1 + info.dir2 + info.dir3) < -0.3;
+            // if(direction.sell && (isDown && price >= ma) ){
+            //     Log('init sell',price);
+            //     await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
+            // }else if ( direction.buy &&  !isDown && price <= ma){
+            //     Log('init buy',price);
+            //     await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
+            // }
+
+            if(direction.buy && (  
+                price <= getPercentValue(bollInfo.midValue,-7) || 
+                (!isDown && bollInfo.downdir > -50 && (
+                            (price < bollInfo.midValue  && price <= getPercentValue(bollInfo.downValue,3)) || 
+                             (isUp && price <= getPercentValue(bollInfo.midValue,4)) 
+                            ) 
+                )
+            ) ){
+
                 Log('init buy',price);
                 await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
-            }else if(direction.sell && (isDown || price >= ma) ){
+               
+            }else if ( direction.sell &&  (
+                (isDown && bollInfo.updir < 50 && price > bollInfo.midValue  && price >= getPercentValue(bollInfo.upValue,-3))
+            )){
+               
                 Log('init sell',price);
                 await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
             }
@@ -110,13 +137,24 @@ export default class Trader{
 
             let value = getPercent(holdValue,price);
             // Log('value:',value);
+            if(pos.volume / this.unitValue <= 1) offsetPercent = 0;
+
+            addPercent = addPercent + offsetPercent;
+
+            if(
+                (pos.volume > 0 && pos.frozen > 0 && pos.volume !== pos.frozen)
+            ){
+                Log('clear available-frozen info:',account.available,account.frozen);
+                await this.adapter.clearAllProcessOrders();
+                return;
+            }
 
             // 做空
             if (pos.direction == 'sell') {
                 let isProfit = holdValue > price;
                 Log('Sell:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
                 // if (isProfit && value >= profit*0.4) {
-                if (isProfit && pos.volume > 0 && pos.frozen == 0 && value >= profit*0.4) {
+                if (isProfit && pos.volume > 0 && pos.frozen == 0) {
                     //盈利
                     // if(!openOrder || openOrder.offset !== 'close'){
                         let closePrice = holdValue - holdValue * profit * 0.01;
@@ -137,7 +175,7 @@ export default class Trader{
                     return;
                 }
                 
-                if(!isProfit && pos.volume /this.unitValue < maxLever  && value >= addPercent * 0.4  && availableUnit > pos.volume * 0.8) {
+                if(!isProfit && pos.volume /this.unitValue < maxLever  && value >= addPercent * 0.4  && availableUnit > pos.volume * 0.8*addRatio) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue + holdValue * addPercent * 0.01;
@@ -149,21 +187,13 @@ export default class Trader{
                 } 
             }
 
-            if(
-                (pos.volume > 0 && pos.frozen > 0 && pos.volume !== pos.frozen)
-            ){
-                Log('clear available-frozen info:',account.available,account.frozen);
-                await this.adapter.clearAllProcessOrders();
-                return;
-            }
-
             // 做多
             if (pos.direction == 'buy') {
                 let isProfit = holdValue < price;
                 Log('Buy:','profit',profit,'addPercent',addPercent,'addRatio',addRatio,'clearPercent',clearPercent,'value:',isProfit ? value : -1 * value,);
 
                 // if (isProfit && value >= profit*0.4) {
-                if (pos.volume > 0 && pos.frozen == 0) {
+                if (isProfit && pos.volume > 0 && pos.frozen == 0) {
                     //盈利
                     // this.adapter.closeOrder(price,pos.volume, 'sell', 'optimal_20_fok');
                     // if(!openOrder || openOrder.offset !== 'close'){
@@ -185,7 +215,7 @@ export default class Trader{
                     return;
                 }
                 
-                if (!isProfit && pos.volume /this.unitValue < maxLever && value >= addPercent*0.4 && availableUnit > pos.volume * 0.8 ) {
+                if (!isProfit && pos.volume /this.unitValue < maxLever && value >= addPercent*0.4 && availableUnit > pos.volume * 0.8* addRatio ) {
                     //负盈利
                     if(!openOrder || openOrder.offset !== 'open'){
                         let openPrice = holdValue - holdValue * addPercent * 0.01;
@@ -201,4 +231,8 @@ export default class Trader{
         }
 
     }
+}
+
+function getPercentValue(base,percent){
+    return base + base * percent * 0.01;
 }
