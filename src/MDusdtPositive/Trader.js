@@ -79,25 +79,25 @@ export default class Trader{
             }
 
             let ma = await this.adapter.getMa()
-            // let info = await this.adapter.getMaDir(); 
-            // let bollInfo = await this.adapter.getBollInfo();
-            // bollInfo.updir =  bollInfo.updir /price * 100;
-            // bollInfo.downdir =  bollInfo.downdir /price * 100;
+            let info = await this.adapter.getMaDir(); 
+            let bollInfo = await this.adapter.getBollInfo();
+            bollInfo.updir =  bollInfo.updir /price * 100;
+            bollInfo.downdir =  bollInfo.downdir /price * 100;
 
-            // info.dir1 = info.dir1/price*100;
-            // info.dir2 = info.dir2/price*100;
-            // info.dir3 = info.dir3/price*100;
+            info.dir1 = info.dir1/price*100;
+            info.dir2 = info.dir2/price*100;
+            info.dir3 = info.dir3/price*100;
            
-            // Log('ma:',ma,'info',info.dir1,info.dir2,info.dir3);
-            // Log('bollInfo.updir',bollInfo.updir,'bollInfo.downdir',bollInfo.downdir);
+            Log('ma:',ma,'info',info.dir1,info.dir2,info.dir3);
+            Log('bollInfo.updir',bollInfo.updir,'bollInfo.downdir',bollInfo.downdir);
 
             // return;
 
             // let isUp = dirs[0] > 0.1 && dirs[1] > 0.1;
-            // let isUp =  (info.ma1 > info.ma2 && info.ma2 > info.ma3) && ( info.dir1 + info.dir2 + info.dir3) > 0.2  && ( info.dir1 > 0 && info.dir2 > 0 && info.dir3 > 0);
-            // let isDown = (info.ma1 < info.ma2 && info.ma2 < info.ma3) &&( info.dir1 + info.dir2 + info.dir3) < -0.2 && ( info.dir1 < 0 && info.dir2 < 0 && info.dir3 < 0);
+            let isUp =  (info.ma1 > info.ma2 && info.ma2 > info.ma3) && ( info.dir1 + info.dir2 + info.dir3) > 0.2  && ( info.dir1 > 0 && info.dir2 > 0 && info.dir3 > 0);
+            let isDown = (info.ma1 < info.ma2 && info.ma2 < info.ma3) &&( info.dir1 + info.dir2 + info.dir3) < -0.2 && ( info.dir1 < 0 && info.dir2 < 0 && info.dir3 < 0);
 
-            // Log('isUp',isUp,'isDown',isDown)
+            Log('isUp',isUp,'isDown',isDown)
             // if(direction.sell && (isDown && price >= ma) ){
             //     Log('init sell',price);
             //     await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
@@ -105,35 +105,36 @@ export default class Trader{
             //     Log('init buy',price);
             //     await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
             // }
-            if( this.lastDir === 'sell' && price >= ma ){
-                Log('init sell',price);
-                await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
-                this.lastDir = 'sell';
-            }else if (this.lastDir === 'buy' &&  price <= ma){
-                Log('init buy',price);
-                await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
-                this.lastDir = 'buy';
-            }
 
-            // if(direction.buy && price <= ma && (  
-            //     price <= getPercentValue(bollInfo.midValue,-4.5) || 
-            //     (!isDown && bollInfo.downdir > -2 && (
-            //                 (price < bollInfo.midValue  && price <= getPercentValue(bollInfo.downValue,0.5)) || 
-            //                  (isUp && price <= getPercentValue(bollInfo.midValue,1)) 
-            //                 ) 
-            //     )
-            // ) ){
-
-            //     Log('init buy',price);
-            //     await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
-               
-            // }else if ( direction.sell && price >= ma && (
-            //     (!isUp && bollInfo.updir < 2 && price > bollInfo.midValue  && price >= getPercentValue(bollInfo.upValue,-0.5))
-            // )){
-               
+            // if( this.lastDir === 'sell' && price >= ma ){
             //     Log('init sell',price);
             //     await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
+            //     this.lastDir = 'sell';
+            // }else if (this.lastDir === 'buy' &&  price <= ma){
+            //     Log('init buy',price);
+            //     await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
+            //     this.lastDir = 'buy';
             // }
+
+            if(direction.buy && price <= ma && (  
+                price <= getPercentValue(bollInfo.midValue,-4.5) || 
+                (!isDown && bollInfo.downdir > -2 && (
+                            (price < bollInfo.midValue  && price <= getPercentValue(bollInfo.downValue,0.5)) || 
+                             (isUp && price <= getPercentValue(bollInfo.midValue,1)) 
+                            ) 
+                )
+            ) ){
+
+                Log('init buy',price);
+                await this.adapter.openOrder(price, this.unitValue , 'buy', 'optimal_20_fok');
+               
+            }else if ( direction.sell && price >= ma && (
+                (!isUp && bollInfo.updir < 2 && price > bollInfo.midValue  && price >= getPercentValue(bollInfo.upValue,-0.5))
+            )){
+               
+                Log('init sell',price);
+                await this.adapter.openOrder(price, this.unitValue, 'sell', 'optimal_20_fok');
+            }
 
         }
 
@@ -143,10 +144,10 @@ export default class Trader{
         if (account.position.length > 0) {
             let pos = account.position[0];
             
-            if(pos.volume === 1) {
-                Log('position 1 sleep')
-                return await sleep();
-            }
+            // if(pos.volume === 1) {
+            //     Log('position 1 sleep')
+            //     return await sleep();
+            // }
             
             let holdValue = pos.cost_open;
             // Log(this.unitValue * this.adapter.contract_size*price,pos.profit)
